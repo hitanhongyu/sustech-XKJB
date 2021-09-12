@@ -186,10 +186,15 @@ func login(userid,passwd string) (string,int){
 		return "Input error",0
 	}
 	//GET JSESSIONID and route
-	resp,_:=cli.Get("https://tis.sustech.edu.cn/session/invalid")
+	resp,err:=cli.Get("https://tis.sustech.edu.cn/session/invalid")
+	if err!=nil{
+		return "Time out, Try again",-2
+	}
 	req,_:= http.NewRequest("GET","https://tis.sustech.edu.cn/cas",nil)
-	resp,_ = cli.Do(req)
-
+	resp,err = cli.Do(req)
+	if err!=nil{
+		return "Time out, Try again",-2
+	}
 	//Get the execution
 	body,_:=io.ReadAll(resp.Body)
 	reg,_:=regexp.Compile("<input type=\"hidden\" name=\"execution\" value=\".*\"/>")
@@ -202,8 +207,10 @@ func login(userid,passwd string) (string,int){
 
 	//get DISSESSION
 	req,_=http.NewRequest("GET","https://cas.sustech.edu.cn/cas/clientredirect?client_name=Wework&service=https%3A%2F%2Ftis.sustech.edu.cn%2Fcas",nil)
-	resp,_=cli.Do(req)
-
+	resp,err=cli.Do(req)
+	if err!=nil{
+		return "Time out, Try again",-2
+	}
 	//GET TGC
 	urls:=url.Values{}
 	urls.Add("execution",execution)
@@ -216,7 +223,10 @@ func login(userid,passwd string) (string,int){
 	req.Header.Add("Content-Length",strconv.Itoa(len([]byte(urls.Encode()))))
 	req.Header.Add("Content-Type","application/x-www-form-urlencoded")
 	req.Header.Add("rolecode","02")
-	resp,_=cli.Do(req)
+	resp,err=cli.Do(req)
+	if err!=nil{
+		return "Time out, Try again",-2
+	}
 	if resp.StatusCode==401{
 		return "Wrong passwd or userId",-1
 	}
@@ -226,15 +236,14 @@ func main(){
 	username:=""
 	passwd:=""
 	course_name:=""
-	fmt.Println("Please Input your userid and passwd:")
-	fmt.Scanf("-u %s\n",&username)
-	fmt.Scanf("-p %s\n",&passwd)
+	fmt.Println("Please Input your userid and passwd:(-u your_student_id -p your_passwd)")
+	fmt.Scanf("-u %s -p %s\n",&username,&passwd)
 	res,status:=login(username,passwd)
 	fmt.Println(res)
 	for status!=1{
-		fmt.Println("Please Input your userid and passwd Again:")
-		fmt.Scanf("-u %s\n",&username)
-		fmt.Scanf("-p %s\n",&passwd)
+		fmt.Println("Please Input your userid and passwd Again:(-u your_student_id -p your_passwd)")
+		fmt.Scanf("-u %s -p %s\n",&username,&passwd)
+		fmt.Println(username,passwd)
 		res,status = login(username,passwd)
 		fmt.Println(res)
 	}
