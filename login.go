@@ -43,6 +43,7 @@ func Xk(course_name string){
 	flag:=0
 	fmt.Println("是否进行选课:(0 否 1 是)")
 	fmt.Scan(&flag)
+
 	if flag==1{
 		for i:=0;i<len(p_ids);i++{
 			i := i
@@ -57,10 +58,10 @@ func Xk(course_name string){
 				urls.Add("p_sfsyxkgwc","0")
 				urls.Add("p_xktjz","rwtjzyx")
 				urls.Add("p_chaxunxh","")
-				urls.Add("p_gjz","")
+				urls.Add("p_gjz",course_name)
 				urls.Add("p_skjs","")
 				urls.Add("p_xn","2021-2022")
-				urls.Add("p_xq","1")
+				urls.Add("p_xq","2")
 				urls.Add("p_xnxq","2021-20221")
 				urls.Add("p_dqxn","2021-2022")
 				urls.Add("p_dqxq","1")
@@ -90,13 +91,19 @@ func Xk(course_name string){
 				urls.Add("pageNum","1")
 				urls.Add("pageSize","12")
 				for {
-					req,_:=http.NewRequest("POST","https://tis.sustech.edu.cn/Xsxk/addGouwuche",strings.NewReader(urls.Encode()))
+					req,_:= http.NewRequest("POST","https://tis.sustech.edu.cn/Xsxk/addGouwuche",strings.NewReader(urls.Encode()))
 					req.Header.Add("rolecode","02")
 					req.Header.Add("x-requested-with","XMLHttpRequest")
 					req.Header.Add("content-length",strconv.Itoa(len([]byte(urls.Encode()))))
 					req.Header.Add("content-type", "application/x-www-form-urlencoded; charset=UTF-8")
-					resp,_:=cli.Do(req)
-					body,_:=io.ReadAll(resp.Body)
+					resp,err:=cli.Do(req)
+					if err !=nil{
+						continue
+					}
+					body,err:=io.ReadAll(resp.Body)
+					if err !=nil{
+						continue
+					}
 					fmt.Println(string(body))
 					if strings.Contains(string(body),"操作成功"){
 						break
@@ -123,7 +130,7 @@ func queryKxrw(coures_name string) []string{
 	urls.Add("p_gjz",coures_name)
 	urls.Add("p_skjs","")
 	urls.Add("p_xn","2021-2022")
-	urls.Add("p_xq","1")
+	urls.Add("p_xq","2")
 	urls.Add("p_xnxq","2021-20221")
 	urls.Add("p_dqxn","2021-2022")
 	urls.Add("p_dqxq","1")
@@ -241,9 +248,6 @@ func main(){
 	res,status:=login(username,passwd)
 	fmt.Println(res)
 	for status!=1{
-		fmt.Println("Please Input your userid and passwd Again:(-u your_student_id -p your_passwd)")
-		fmt.Scanf("-u %s -p %s\n",&username,&passwd)
-		fmt.Println(username,passwd)
 		res,status = login(username,passwd)
 		fmt.Println(res)
 	}
